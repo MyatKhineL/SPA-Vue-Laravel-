@@ -15,7 +15,7 @@ class ProductController extends Controller
      */
     public function index()
     {
-       $product = Product::all();
+       $product = Product::latest('id')->get();
        return $product;
     }
 
