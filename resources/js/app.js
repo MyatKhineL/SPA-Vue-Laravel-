@@ -12,6 +12,7 @@ Vue.component('example-component', require('./components/ExampleComponent.vue').
 Vue.component('product-component', require('./components/ProductComponent').default);
 
 
+
 const app = new Vue({
     el: '#app',
 });

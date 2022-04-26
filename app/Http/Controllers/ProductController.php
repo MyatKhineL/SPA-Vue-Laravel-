@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Http\Requests\StoreProductRequest;
 use App\Http\Requests\UpdateProductRequest;
 use App\Models\Product;
+use http\Env\Request;
 
 class ProductController extends Controller
 {
@@ -15,8 +16,13 @@ class ProductController extends Controller
      */
     public function index()
     {
-       $product = Product::latest('id')->get();
-       return $product;
+       if(request('search')){
+          return Product::where('name','like','%'.request('search').'%')->latest('id')->get();
+       }else{
+           $product = Product::latest('id')->get();
+           return $product;
+       }
+
     }
 
     /**

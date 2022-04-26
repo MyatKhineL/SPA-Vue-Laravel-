@@ -7,9 +7,9 @@
                </div>
            </div>
            <div class="col-4">
-               <form>
+               <form @submit.prevent="searchProduct">
                    <div class="input-group">
-                       <input type="text" placeholder="Search" class="form-control">
+                       <input type="text" v-model="search" placeholder="Search" class="form-control">
 
                        <div class="input-group-append">
                            <button type="submit" class="btn btn-primary">
@@ -29,14 +29,19 @@
                         {{ isEditMode ? 'Edit':'Create'}}
                     </h3>
                     <div class="card-body">
-                        <form @submit.prevent="isEditMode ? update() :store() ">
+                        <form @submit.prevent="isEditMode ? update() :store() " @keydown="product.onKeydown($event)">
                             <div class="form-group">
                                 <label>Name </label>
-                                <input type="text" v-model="product.name" class="form-control">
+                                <input type="text" v-model="product.name" class="form-control"
+                                :class="{'is-invalid':product.errors.has('name')}"
+                                >
+                                <has-error :form="product" field="name" ></has-error>
                             </div>
                             <div class="form-group my-3">
                                 <label>Price </label>
-                                <input type="text"  v-model="product.price" class="form-control">
+                                <input type="text"  v-model="product.price" class="form-control"
+                                       :class="{'is-invalid':product.errors.has('price')}">
+                                <has-error :form="product" field="price" ></has-error>
                             </div>
                             <button class="btn btn-primary" type="submit">
                                 <i class="fas fa-save mr-1"></i> Save
@@ -75,6 +80,7 @@
                 </table>
             </div>
             <!--- Table End !-->
+            <!--- Finished !-->
 
         </div>
        </div>
@@ -83,6 +89,9 @@
 </template>
 
 <script>
+import {Form} from 'vform';
+import Swal from 'sweetalert2';
+
 
 export default {
     name:'ProductComponent',
@@ -90,16 +99,23 @@ export default {
     data() {
         return {
             isEditMode:false,
+            search:'',
             products:{},
-            product:{
+            product:new Form({
                 id:'',
                 name:'',
                 price:''
-            }
+            })
         }
     },
 
     methods: {
+         searchProduct(){
+           axios.get('/api/product?search='+this.search)
+               .then((response)=>{
+                   this.products = response.data
+               })
+         },
          view(){
              axios.get('/api/product')
                  .then((response)=>{
@@ -114,7 +130,7 @@ export default {
              this.product.price = '';
          },
          store() {
-             axios.post('/api/product',this.product)
+             this.product.post('/api/product')
              .then(response=>{
                  this.view();
                  this.product.id = '';
@@ -129,7 +145,7 @@ export default {
             this.product.price = product.price;
         },
         update(){
-             axios.put(`/api/product/${this.product.id}`,this.product)
+             this.product.put(`/api/product/${this.product.id}`,this.product)
              .then(response =>{
                  this.view();
                  this.product.id = '';
@@ -140,11 +156,24 @@ export default {
 
         },
         destroy(id){
-             if(!confirm('Are u sure to delete ?')){
-                 return;
-             }
-             axios.delete(`/api/product/${id}`)
-             .then(res=>this.view());
+            Swal.fire({
+                title: 'Are you sure?',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#3085d6',
+                cancelButtonColor: '#d33',
+                confirmButtonText: 'Delete'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    axios.delete(`/api/product/${id}`)
+                        .then(res=>this.view());
+                    Swal.fire({title:'Deleted!', icon:'success'}
+                    );
+
+                }
+            })
+
+
         }
     },
 
